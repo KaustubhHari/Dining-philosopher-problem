@@ -1,0 +1,51 @@
+import threading
+import random
+import time
+
+N = 5  # number of philosophers
+MAX_MEALS = 100  # maximum number of meals per philosopher
+
+# initialize locks for forks and print statements
+forks = [threading.Lock() for i in range(N)]
+print_lock = threading.Lock()
+
+# define philosopher thread function
+def philosopher(i):
+    meals = 0
+    while meals < MAX_MEALS:
+        # start by meditating
+        time.sleep(random.uniform(0, 1))
+
+        # try to acquire left fork
+        forks[i].acquire()
+        with print_lock:
+            print(f"Philosopher {i} acquired left fork")
+
+        # try to acquire right fork
+        forks[(i + 1) % N].acquire()
+        with print_lock:
+            print(f"Philosopher {i} acquired right fork")
+
+        # eat spaghetti
+        time.sleep(random.uniform(0, 1))
+        meals += 1
+        with print_lock:
+            print(f"Philosopher {i} ate meal {meals}")
+
+        # release forks
+        forks[i].release()
+        with print_lock:
+            print(f"Philosopher {i} released left fork")
+
+        forks[(i + 1) % N].release()
+        with print_lock:
+            print(f"Philosopher {i} released right fork")
+
+# create and start philosopher threads
+philosophers = [threading.Thread(target=philosopher, args=(i,)) for i in range(N)]
+for p in philosophers:
+    p.start()
+
+# wait for all threads to finish
+for p in philosophers:
+    p.join()
